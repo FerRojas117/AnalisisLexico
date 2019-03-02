@@ -153,26 +153,7 @@ namespace circle_tutuorial
             return pos;
         }
 
-        // metodo  que se utilizo en el automata para saber si una cadena termino de forma
-        // correcta
-        /*
-        public void CheckFin(int cont, int tam, int ultimoEstado)
-        {
-             if (cont == tam)
-             {
-                foreach (string s in finales)
-                {
-                    if (Convert.ToInt32(s) == ultimoEstado)
-                    {
-                        textBox2.AppendText("Cadena Correcta." + "\n");
-                        return;
-                    }      
-                }
-                textBox2.AppendText("Cadena incorrecta. no termina en un estado final" + "\n");
-                return;
-            }  
-        }
-        */
+  
 
         public void ContarEstadosYhacerTrans()
         {
