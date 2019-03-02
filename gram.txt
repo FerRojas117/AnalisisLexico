@@ -1,0 +1,19 @@
+CARACTERES,
+digito = NUMERO,
+letras = ALFABETO,
+ampersam = &,
+pregunta = ?,
+positivo = +,
+negativo = -,
+menorque = <,
+TOKENS,
+numeroPositivo = positivo.digito.digito*,
+numeroNegativo = negativo.digito.digito*,
+identificador = letras.letras*,
+menorque = menorque,
+ampersam = ampersam,
+pregunta = pregunta,
+corrIzq = menorque.menorque,
+FIN
+
+
