@@ -1,19 +1,30 @@
-CARACTERES,
-digito = NUMERO,
-letras = ALFABETO,
-ampersam = &,
-pregunta = ?,
-positivo = +,
-negativo = -,
-menorque = <,
-TOKENS,
-numeroPositivo = positivo.digito.digito*,
-numeroNegativo = negativo.digito.digito*,
-identificador = letras.letras*,
-menorque = menorque,
-ampersam = ampersam,
-pregunta = pregunta,
-corrIzq = menorque.menorque,
-FIN
+CARACTERES
+digito = NUMERO
+letras = ALFABETO
+Inicio = inicio
+Fin = fin
+Si = si
+Sino = sino
+asignacion = =
+positivo = +
+negativo = -
+diferente = !
+coma = ,
+punto = .
+TOKENS
+numeroPositivo = positivo digito digito* ,
+numeroNegativo = negativo digito digito* ,
+numeroRealPositivo = positivo digito digito* punto digito digito* ,
+numeroRealNegativo = negativo digito digito* punto digito digito* ,
+identificador = letras letras* digito* ,
+asignacion = asignacion ,
+igualdad = asignacion asignacion ,
+diferente = diferente asignacion ,
+coma = coma ,
+Inicio = Inicio ,
+Fin = Fin ,
+Si = Si ,
+Sino = Sino ,
+FINDEGRAMATICA
 
 

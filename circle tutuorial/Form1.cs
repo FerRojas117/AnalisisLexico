@@ -30,6 +30,8 @@ namespace circle_tutuorial
 
         List<string> alfabeto = new List<string>();
         List<int> alfabetoNumero = new List<int>();
+        
+       
         List<Transiciones> transiciones = new List<Transiciones>();
 
         List<Finales> finales = new List<Finales>();
@@ -70,8 +72,9 @@ namespace circle_tutuorial
              * leer el lenguaje del archivo y almacenarlo en 
              * las clases de caracteres y tokens ya construidas 
              */
+
             string tokens = fileContent;
-            string[] tokens2 = tokens.Split(' ', ',', '\r', '\n', '\0');
+            string[] tokens2 = tokens.Split(' ', '\r', '\0', '\n');
 
             String[] datosnew = new String[tokens2.Length];
             int j = 0;
@@ -85,58 +88,89 @@ namespace circle_tutuorial
                 }
             }
             int contador = datosnew.Length;
-
+            int placeForTokens = 0;
             // EMPIEZAN A LLENARSE LOS OBJETOS
             for (int x = 0; x < contador; x++)
             {
-                if (datosnew[x] == "CARACTERES")
+                if(datosnew[x] == "CARACTERES")
                 {
                     x++;
                     while (datosnew[x] != "TOKENS")
                     {
                         Caracteres c = new Caracteres(datosnew[x], datosnew[x + 2]);
                         caracteres.Add(c);
-                        x += 3;
+                        x+=3;
                     }
-                }
-                if (datosnew[x] == "TOKENS")
-                {
-                    string[] caracsDeTokens;
-                    x++;
-                    while (datosnew[x] != "FIN")
-                    {
-                        caracsDeTokens = datosnew[x + 2].Split('.', '\n', '\r');
-                        Tokens t = new Tokens(datosnew[x], caracsDeTokens);
-                        this.tokens.Add(t);
-                        x += 3;
-                    }
+                    placeForTokens = x + 1;
+                    break;
                 }
             }
+            
+            int placeValueTokens = placeForTokens + 2;
+            for (int i = placeForTokens; i < contador; i++)
+            {
+                while (datosnew[i] != "FINDEGRAMATICA")
+                {
+                    List<string> valDeToks = new List<string>();
+                    placeValueTokens = i + 2;
+                    while (datosnew[placeValueTokens] != ",")
+                    {
+                        Console.WriteLine("ADDED: " + datosnew[placeValueTokens]);
+                        valDeToks.Add(datosnew[placeValueTokens]);
+                        placeValueTokens++;
+                    }
+                    Tokens t = new Tokens(datosnew[i], valDeToks);
+                   this.tokens.Add(t);
+                   i = placeValueTokens + 1;
+                   Console.WriteLine(datosnew[i]);
+                }
+                break;
+            }
+            foreach(Caracteres c in caracteres)
+            {
+                Console.WriteLine("Variable: " + c.variable + " Caracter: " + c.valor);
+            }
+            foreach(Tokens t in this.tokens)
+            {
+                Console.Write("Variable: " + t.variable + " ");
+                foreach(string s in t.valoresDeToken)
+                {
+                    Console.Write("Token: " + s + " ");
+                }
+                Console.WriteLine();
+            }
+        
             Caracteres otro = new Caracteres("otro", "otro");
 
             caracteres.Add(otro);
             //linea añadida
 
-
+           
             // se crea matriz con un objeto de la ClaseMatriz
             // la clase matriz debe ser modificada para albergar los campos que sean
             // necesarios, al menos debe tener el de Token, para saber qué tipo 
             // de token sigió el autómata
             ContarEstadosYhacerTrans();
 
-            cm = new ClaseMatriz(numEstados.Count, caracteres.Count);
-            // Se deben cambiar posiciones en matriz, modificar funciones de getposEstados
-            // y get posicion alfabeto para obtener las posiciones y en efecto, cambiar
-            // esa posición con el estado al que conduce esa posicion
-            int col = 0;
-
-            foreach (Transiciones s in transiciones)
+            foreach (Transiciones t in transiciones)
             {
-                col = getPosAlfa(s.caracter);
-                cm.CambiarPosicion(Convert.ToInt32(s.estadoInicial), col, Convert.ToInt32(s.estadoFinal));
+                Console.WriteLine("EI: " + t.estadoInicial + " Tok: " + t.caracter + " EF: " + t.estadoFinal);
             }
 
-            cm.ImprimirMatriz();
+
+           cm = new ClaseMatriz(numEstados.Count, caracteres.Count);
+           // Se deben cambiar posiciones en matriz, modificar funciones de getposEstados
+           // y get posicion alfabeto para obtener las posiciones y en efecto, cambiar
+           // esa posición con el estado al que conduce esa posicion
+           int col = 0;
+
+           foreach (Transiciones s in transiciones)
+           {
+               col = getPosAlfa(s.caracter);
+               cm.CambiarPosicion(Convert.ToInt32(s.estadoInicial), col, Convert.ToInt32(s.estadoFinal));
+           }
+
+           cm.ImprimirMatriz();
         }
 
         // metodo que se tiene que modificar, para obtener la posicion del caracter
@@ -161,95 +195,96 @@ namespace circle_tutuorial
             int estadoInicial = 0;
             int estadoActual = 0;
             string repeticion = "*";
-            bool flagForFirst = true;
+            bool flagHasRepetition = false;
             bool flagForRepeated = false;
 
             numEstados.Add(estados);
 
             foreach (Tokens t in tokens)
             {
-                foreach (string s in t.valoresDeToken)
+                int tamValTokens = t.valoresDeToken.Count;
+                flagHasRepetition = false;
+                flagForRepeated = false;
+                // valores del token 
+                for (int i = 0; i < tamValTokens; i++)
                 {
-                    // si hubo un caracter repetido en token, saltar un espacio
-                    if (flagForRepeated)
-                    {
-                        flagForRepeated = false;
-                        continue;
-                    } 
+                    string valToken = t.valoresDeToken[i];
+                    //Console.WriteLine("TOKEN a tratar: " + valToken );
 
+                    flagHasRepetition = false;
+                    if (valToken.Contains(repeticion))
+                    {
+                        valToken = t.valoresDeToken[i].Trim(new Char[] { '*' });
+                        flagHasRepetition = true;
+                    }
+                    // si hubo un caracter repetido en token, saltar hasta la posicion del path 
                     foreach (Caracteres c in caracteres)
                     {
-                        
-                        // encontrar caracteres con repeticionm
-                        if (s.Contains(repeticion))
+                        flagForRepeated = false;
+                        if (valToken == c.variable)
                         {
-                            string valor = s.Trim(new Char[] { '*' });
-                            if (valor == c.variable)
+                            foreach (Transiciones tr in transiciones)
                             {
-                                Transiciones transiConRepeticion = new Transiciones(estadoActual, c.valor, estadoActual);
-                                transiciones.Add(transiConRepeticion);
-                            }
-                        }
-                        // encontrar caracteres sin repeticionm
-                        if (s == c.variable)
-                        {
-                            // PARA SABER si token ya habia sido asignado a un estado
-                            if (flagForFirst)
-                            {
-                                foreach (EstadoAssignToken et in eat)
+                                //Console.WriteLine("EA: " + tr.estadoInicial + " caracter: " + tr.caracter + "EF: " + tr.estadoFinal);
+                                foreach(int x in numEstados)
                                 {
-                                    if (c.valor == et.caracter)
+                                    if (tr.estadoInicial == estadoActual && tr.caracter == c.valor && tr.estadoFinal == x)
                                     {
-                                        estadoActual = et.estado;
+                                        //Console.WriteLine("EA: " + tr.estadoInicial + " caracter: " + tr.caracter + "EF: " + tr.estadoFinal);
+                                       // Console.WriteLine("TRansicion repetida: " + tr.estadoInicial + " " + tr.caracter + " " + tr.estadoFinal);
+                                        estadoActual = tr.estadoFinal;
                                         flagForRepeated = true;
-                                        Console.WriteLine("repetido");
                                         break;
                                     }
                                 }
-                             
-                                // Reemplazar numero de estado 
-                                int estadoLLegada = numEstados[numEstados.Count - 1] + 1;
-                                Transiciones transiSinRepeticion = new Transiciones(estadoActual, c.valor, estadoLLegada);
-                                transiciones.Add(transiSinRepeticion);
-                                estadoActual = estadoLLegada;
+                                
+                            }
+                            if (flagForRepeated) { break; }
 
-                                EstadoAssignToken esat = new EstadoAssignToken(c.valor, estadoActual);
-                                flagForFirst = false;
-                                eat.Add(esat);
-                              
-                                estados++;
-                                numEstados.Add(estados);
+                            if(flagHasRepetition)
+                            {
+                               // Console.WriteLine("Con rep");
+                                Transiciones transiConRepeticion = new Transiciones(estadoActual, c.valor, estadoActual);
+                                Console.WriteLine("EA: " + estadoActual + " TOK: " + c.valor + " EF: " + estadoActual );
+                                transiciones.Add(transiConRepeticion);
+                                flagHasRepetition = false;
                             }
-                            // no es el primero
                             else
-                            {   
-                                Transiciones transiSinRepeticion = new Transiciones(estadoActual, c.valor, estadoActual + 1);
+                            {
+                                Console.WriteLine("Sin rep");
+                                Transiciones transiSinRepeticion = new Transiciones(estadoActual, c.valor, numEstados.Count);
+                                Console.WriteLine("EA: " + estadoActual + " TOK: " + c.valor + " EF: " + numEstados.Count);
                                 transiciones.Add(transiSinRepeticion);
-                                estadoActual += 1;
+                                estadoActual = numEstados.Count;
                                 estados++;
                                 numEstados.Add(estados);
-                            }
+                                Console.WriteLine("ESTADO AGREGADO: " + estados);
+                            } 
                         }
                     }
-                }
-                flagForRepeated = false;
+                }     
                 // agregar estado ultimo, de transicion de otro.
                 //linea añadida
                 Transiciones transi = new Transiciones(estadoActual, "otro", estadoActual + 1);
+                Console.WriteLine("EA: " + estadoActual + " TOK: otro" + " EF: " + (estadoActual + 1));
                 //linea añadida
-  
+
                 transiciones.Add(transi);
 
                 estados++;
                 numEstados.Add(estados);
                 Finales f = new Finales(estadoActual + 1, t.variable);
 
-
                 finales.Add(f);
-
                 estadoActual = estadoInicial;
-                flagForFirst = true;
+
             }
+            /*
+            foreach(Transiciones t in transiciones)
+            {
+                Console.WriteLine("EI: " + t.estadoInicial + " TOK: " + t.caracter + " EF: " + t.estadoFinal);
+            }
+            */
         }
 
 
@@ -268,11 +303,13 @@ namespace circle_tutuorial
             int estadoInicial = 0;
             int estadoActual = 0;
             int k = 0;
+            bool flagIsReservada = false;
             for (int i = 0; i < contadorLineas; i++)
             {
                 for(int j = 0; j < textBox1.Lines[i].Length; j++)
                 {
                     string caracter = textBox1.Lines[i][j].ToString();
+                    // quitar exclusion de espacios 
                     if (String.IsNullOrEmpty(caracter) || caracter == " " || caracter == "\t") continue;
                     isNumber = checkIfNumero(caracter);
                     isLetter = checkIfLetter(caracter);
@@ -297,6 +334,7 @@ namespace circle_tutuorial
  
             string tipo;
             bool isExpected;
+
             for (int i = 0; i < lineas.Count; i++)
             {
                 Console.WriteLine("ENTRO: i:" + i);
@@ -307,6 +345,18 @@ namespace circle_tutuorial
                 {
                     if (estadoActual == f.estado)
                     {
+                        foreach(Caracteres c in caracteres)
+                        {
+                            if(tok == c.valor)
+                            {
+                                TokensEnArchivo esReservada = new TokensEnArchivo(lineas[i].numeroLinea, c.variable, tok);
+                                tea.Add(esReservada);
+                                tok = "";
+                                estadoActual = estadoInicial;
+                                flagIsReservada = true;
+                            }
+                        }
+                        if(flagIsReservada) { flagIsReservada = false; break; }
                         TokensEnArchivo tena = new TokensEnArchivo(lineas[i].numeroLinea, f.token, tok);
                         tea.Add(tena);
                         tok = "";
@@ -344,11 +394,12 @@ namespace circle_tutuorial
                         textBox2.AppendText("\n");
                         lineas.Clear();
                         expectedChars.Clear();
+                        tea.Clear();
+                        lineas.Clear();
                         return;
                     }
                     estadoActual = cm.Matriz[estadoActual, valor];
                     i--;
-                   // retroceso = true;
                 }
             }
             
@@ -505,8 +556,9 @@ namespace circle_tutuorial
     class Tokens
     {
         public string variable;
-        public string[] valoresDeToken;
-        public Tokens(string variable, string[] valoresDeToken)
+        public List<string> valoresDeToken;
+
+        public Tokens(string variable, List<string> valoresDeToken)
         {
             this.variable = variable;
             this.valoresDeToken = valoresDeToken;
