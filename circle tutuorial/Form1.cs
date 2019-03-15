@@ -21,6 +21,7 @@ namespace circle_tutuorial
          * 
          */
         List<Caracteres> caracteres = new List<Caracteres>();
+        List<string> reservadas = new List<string>();
         List<Tokens> tokens = new List<Tokens>();
         List<EstadoAssignToken> eat = new List<EstadoAssignToken>();
         List<string> estados = new List<string>();
@@ -30,8 +31,8 @@ namespace circle_tutuorial
 
         List<string> alfabeto = new List<string>();
         List<int> alfabetoNumero = new List<int>();
-        
-       
+
+
         List<Transiciones> transiciones = new List<Transiciones>();
 
         List<Finales> finales = new List<Finales>();
@@ -92,24 +93,25 @@ namespace circle_tutuorial
             // EMPIEZAN A LLENARSE LOS OBJETOS
             for (int x = 0; x < contador; x++)
             {
-                if(datosnew[x] == "CARACTERES")
+                if (datosnew[x] == "CARACTERES")
                 {
                     x++;
                     while (datosnew[x] != "TOKENS")
                     {
                         Caracteres c = new Caracteres(datosnew[x], datosnew[x + 2]);
                         caracteres.Add(c);
-                        x+=3;
+                        x += 3;
+                        Console.WriteLine("C: " + datosnew[x]);
                     }
                     placeForTokens = x + 1;
                     break;
                 }
             }
-            
+
             int placeValueTokens = placeForTokens + 2;
             for (int i = placeForTokens; i < contador; i++)
             {
-                while (datosnew[i] != "FINDEGRAMATICA")
+                while (datosnew[i] != "FINDEGRAMATICA" && datosnew[i] != "RESERVADAS")
                 {
                     List<string> valDeToks = new List<string>();
                     placeValueTokens = i + 2;
@@ -120,32 +122,56 @@ namespace circle_tutuorial
                         placeValueTokens++;
                     }
                     Tokens t = new Tokens(datosnew[i], valDeToks);
-                   this.tokens.Add(t);
-                   i = placeValueTokens + 1;
-                   Console.WriteLine(datosnew[i]);
+                    this.tokens.Add(t);
+                    i = placeValueTokens + 1;
+                    Console.WriteLine(datosnew[i]);
                 }
                 break;
             }
-            foreach(Caracteres c in caracteres)
+
+            for (int i = 0; i < contador; i++)
+            {
+                if (datosnew[i] == "RESERVADAS")
+                {
+                    i++;
+                    while (datosnew[i] != "FINDEGRAMATICA")
+                    {
+                        string res = datosnew[i];
+                        reservadas.Add(res);
+                        i++;
+                    }
+                    break;
+                }
+            }
+            
+
+            foreach (string s in reservadas)
+            {
+                Console.WriteLine("reservada: " + s);
+            }
+
+            foreach (Caracteres c in caracteres)
             {
                 Console.WriteLine("Variable: " + c.variable + " Caracter: " + c.valor);
             }
-            foreach(Tokens t in this.tokens)
+            foreach (Tokens t in this.tokens)
             {
                 Console.Write("Variable: " + t.variable + " ");
-                foreach(string s in t.valoresDeToken)
+                foreach (string s in t.valoresDeToken)
                 {
                     Console.Write("Token: " + s + " ");
                 }
                 Console.WriteLine();
             }
-        
+
             Caracteres otro = new Caracteres("otro", "otro");
+            Caracteres espacio = new Caracteres(" ", " ");
 
             caracteres.Add(otro);
+            caracteres.Add(espacio);
             //linea añadida
 
-           
+
             // se crea matriz con un objeto de la ClaseMatriz
             // la clase matriz debe ser modificada para albergar los campos que sean
             // necesarios, al menos debe tener el de Token, para saber qué tipo 
@@ -158,19 +184,19 @@ namespace circle_tutuorial
             }
 
 
-           cm = new ClaseMatriz(numEstados.Count, caracteres.Count);
-           // Se deben cambiar posiciones en matriz, modificar funciones de getposEstados
-           // y get posicion alfabeto para obtener las posiciones y en efecto, cambiar
-           // esa posición con el estado al que conduce esa posicion
-           int col = 0;
+            cm = new ClaseMatriz(numEstados.Count, caracteres.Count);
+            // Se deben cambiar posiciones en matriz, modificar funciones de getposEstados
+            // y get posicion alfabeto para obtener las posiciones y en efecto, cambiar
+            // esa posición con el estado al que conduce esa posicion
+            int col = 0;
 
-           foreach (Transiciones s in transiciones)
-           {
-               col = getPosAlfa(s.caracter);
-               cm.CambiarPosicion(Convert.ToInt32(s.estadoInicial), col, Convert.ToInt32(s.estadoFinal));
-           }
+            foreach (Transiciones s in transiciones)
+            {
+                col = getPosAlfa(s.caracter);
+                cm.CambiarPosicion(Convert.ToInt32(s.estadoInicial), col, Convert.ToInt32(s.estadoFinal));
+            }
 
-           cm.ImprimirMatriz();
+            cm.ImprimirMatriz();
         }
 
         // metodo que se tiene que modificar, para obtener la posicion del caracter
@@ -187,7 +213,7 @@ namespace circle_tutuorial
             return pos;
         }
 
-  
+
 
         public void ContarEstadosYhacerTrans()
         {
@@ -226,26 +252,26 @@ namespace circle_tutuorial
                             foreach (Transiciones tr in transiciones)
                             {
                                 //Console.WriteLine("EA: " + tr.estadoInicial + " caracter: " + tr.caracter + "EF: " + tr.estadoFinal);
-                                foreach(int x in numEstados)
+                                foreach (int x in numEstados)
                                 {
                                     if (tr.estadoInicial == estadoActual && tr.caracter == c.valor && tr.estadoFinal == x)
                                     {
                                         //Console.WriteLine("EA: " + tr.estadoInicial + " caracter: " + tr.caracter + "EF: " + tr.estadoFinal);
-                                       // Console.WriteLine("TRansicion repetida: " + tr.estadoInicial + " " + tr.caracter + " " + tr.estadoFinal);
+                                        // Console.WriteLine("TRansicion repetida: " + tr.estadoInicial + " " + tr.caracter + " " + tr.estadoFinal);
                                         estadoActual = tr.estadoFinal;
                                         flagForRepeated = true;
                                         break;
                                     }
                                 }
-                                
+
                             }
                             if (flagForRepeated) { break; }
 
-                            if(flagHasRepetition)
+                            if (flagHasRepetition)
                             {
-                               // Console.WriteLine("Con rep");
+                                // Console.WriteLine("Con rep");
                                 Transiciones transiConRepeticion = new Transiciones(estadoActual, c.valor, estadoActual);
-                                Console.WriteLine("EA: " + estadoActual + " TOK: " + c.valor + " EF: " + estadoActual );
+                                Console.WriteLine("EA: " + estadoActual + " TOK: " + c.valor + " EF: " + estadoActual);
                                 transiciones.Add(transiConRepeticion);
                                 flagHasRepetition = false;
                             }
@@ -253,31 +279,36 @@ namespace circle_tutuorial
                             {
                                 Console.WriteLine("Sin rep");
                                 Transiciones transiSinRepeticion = new Transiciones(estadoActual, c.valor, numEstados.Count);
-                               // Console.WriteLine("EA: " + estadoActual + " TOK: " + c.valor + " EF: " + numEstados.Count);
+                                Console.WriteLine("EA: " + estadoActual + " TOK: " + c.valor + " EF: " + numEstados.Count);
                                 transiciones.Add(transiSinRepeticion);
                                 estadoActual = numEstados.Count;
                                 estados++;
                                 numEstados.Add(estados);
-                                //Console.WriteLine("ESTADO AGREGADO: " + estados);
-                            } 
+                                Console.WriteLine("ESTADO AGREGADO: " + estados);
+                            }
                         }
                     }
-                }     
+                }
                 // agregar estado ultimo, de transicion de otro.
                 //linea añadida
                 Transiciones transi = new Transiciones(estadoActual, "otro", estadoActual + 1);
-                //Console.WriteLine("EA: " + estadoActual + " TOK: otro" + " EF: " + (estadoActual + 1));
+                Console.WriteLine("EA: " + estadoActual + " TOK: otro" + " EF: " + (estadoActual + 1));
                 //linea añadida
-
                 transiciones.Add(transi);
-
                 estados++;
                 numEstados.Add(estados);
+
+                Transiciones caracterBlank = new Transiciones(estadoActual, " ", estadoActual + 2);
+                Console.WriteLine("EA: " + estadoActual + " TOK: espacio" + " EF: " + (estadoActual + 2));
+                transiciones.Add(caracterBlank);
+                estados++;
+                numEstados.Add(estados);
+
                 Finales f = new Finales(estadoActual + 1, t.variable);
-
+                Finales f_blank = new Finales(estadoActual + 2, t.variable);
                 finales.Add(f);
+                finales.Add(f_blank);
                 estadoActual = estadoInicial;
-
             }
             /*
             foreach(Transiciones t in transiciones)
@@ -304,96 +335,71 @@ namespace circle_tutuorial
             int estadoActual = 0;
             int k = 0;
             bool flagIsReservada = false;
-            bool isIdOrReservada = false;
+
             for (int i = 0; i < contadorLineas; i++)
             {
-                for(int j = 0; j < textBox1.Lines[i].Length; j++)
+                for (int j = 0; j < textBox1.Lines[i].Length; j++)
                 {
                     string caracter = textBox1.Lines[i][j].ToString();
-                    // quitar exclusion de espacios 
-                    if (String.IsNullOrEmpty(caracter) || caracter == " " || caracter == "\n" || caracter == "\r") continue;
+                    if (String.IsNullOrEmpty(caracter)) continue;
                     isNumber = checkIfNumero(caracter);
                     isLetter = checkIfLetter(caracter);
                     //string caracterNext = textBox1.Lines[i][j+1].ToString();  
-                    Lineas l = new Lineas(i+1, caracter, isNumber, isLetter);
+                    Lineas l = new Lineas(i + 1, caracter, isNumber, isLetter);
                     lineas.Add(l);
                 }
                 k = i + 1;
             }
 
-            foreach( Lineas l in lineas)
+            foreach (Caracteres c in caracteres)
             {
-                Console.WriteLine("CE: " + l.caracter);
+                if (lineas[lineas.Count - 1].caracter != c.valor && c.valor != "NUMERO" && c.valor != "ALFABETO" && c.valor != " ")
+                {
+                    Lineas final = new Lineas(k, c.valor, false, false);
+                    //Lineas espacio = new Lineas(k, c.valor, false, false);
+                   // Lineas espacio = new Lineas(k, c.valor", false, false);
+                    Console.WriteLine("VALOR FINAL: " + c.valor);
+                  //  lineas.Add(espacio);
+                    lineas.Add(final);
+                    break;
+                }
             }
 
-            
-          
-            foreach(Caracteres c in caracteres)
-            {
-               if(lineas[lineas.Count-1].caracter != c.valor && c.valor != "NUMERO" && c.valor != "ALFABETO")
-               {
-                 Lineas final = new Lineas(k, c.valor, false, false);
-                 Console.WriteLine("VALOR FINAL: " + c.valor);
-                 lineas.Add(final);
-                 break;
-               }
-            }
- 
             string tipo = "";
-            bool isExpected;
-
+            bool isExpected = false;
+            List<string> expectedChars = new List<string>();
             for (int i = 0; i < lineas.Count; i++)
             {
-                Console.WriteLine("Caracter: " + lineas[i].caracter);
-                Console.WriteLine("EA: " + estadoActual);
                 isExpected = false;
-                foreach(Finales f in finales)
+                Console.WriteLine("EA: " + estadoActual + " CAR: \'" + lineas[i].caracter + "\' ");
+                foreach (Finales f in finales)
                 {
                     if (estadoActual == f.estado)
                     {
-                        foreach(Caracteres c in caracteres)
+                        tok = tok.Trim(new Char[] { ' ' });
+                        foreach (string reserv in reservadas)
                         {
-                            if(tok == c.valor)
+                            if (tok == reserv)
                             {
-                                TokensEnArchivo esReservada = new TokensEnArchivo(lineas[i].numeroLinea, c.variable, tok);
+                                Console.WriteLine("ENTRO A RESERV" + " Variable: " + tok + " TOKEN: " + tok);
+                                TokensEnArchivo esReservada = new TokensEnArchivo(lineas[i].numeroLinea, reserv, tok);
+                                Console.WriteLine("Linea: " + lineas[i].numeroLinea + " Variable: " + tok + " TOKEN: " + tok);
                                 tea.Add(esReservada);
                                 tok = "";
                                 estadoActual = estadoInicial;
                                 flagIsReservada = true;
                             }
                         }
-                        if(flagIsReservada) { flagIsReservada = false; break; }
+                        if (flagIsReservada) { flagIsReservada = false; break; }
                         TokensEnArchivo tena = new TokensEnArchivo(lineas[i].numeroLinea, f.token, tok);
+                        Console.WriteLine("Linea: " + lineas[i].numeroLinea + " Variable: " + f.token + " TOKEN: " + tok);
                         tea.Add(tena);
                         tok = "";
                         estadoActual = estadoInicial;
                     }
                 }
-                List<string> expectedChars = expectedChar(estadoActual);
-                /*
-                if
-                (
-                        lineas[i].caracter == " " ||
-                        lineas[i].caracter == "\n" ||
-                        lineas[i].caracter == "\r" ||
-                        lineas[i].caracter == "\t"
-                )
-                {
-                    foreach (Caracteres c in caracteres)
-                    {
-                        if (tok == c.valor && c.valor.Length > 1 && c.valor != "NUMERO" && c.valor != "ALFABETO")
-                        {
-                            TokensEnArchivo esReservada = new TokensEnArchivo(lineas[i].numeroLinea, c.variable, tok);
-                            tea.Add(esReservada);
-                            tok = "";
-                            estadoActual = estadoInicial;
-                            flagIsReservada = true;
-                        }
-                    }
-                    if (flagIsReservada) { flagIsReservada = false; continue; }
-                    continue;
-                }
-                */
+                expectedChars = expectedChar(estadoActual);
+
                 foreach (string s in expectedChars)
                 {
                     if (lineas[i].isNumber) tipo = "NUMERO";
@@ -408,15 +414,15 @@ namespace circle_tutuorial
                         break;
                     }
                 }
-                if(!isExpected)
-                {
-
+                if (!isExpected)
+                {                  
+                    tipo = "otro"; 
                     Console.WriteLine("ES OTRO");
                     valor = getPosAlfa(tipo);
                     if (cm.Matriz[estadoActual, valor] == -1)
                     {
                         textBox2.AppendText("token INESPERADO: " + lineas[i].caracter + ". TOKEN ESPERADO: ");
-                        foreach(string s in expectedChars)
+                        foreach (string s in expectedChars)
                         {
                             textBox2.AppendText(s + " || ");
                         }
@@ -424,24 +430,29 @@ namespace circle_tutuorial
                         lineas.Clear();
                         expectedChars.Clear();
                         tea.Clear();
-                        lineas.Clear();
                         return;
                     }
                     estadoActual = cm.Matriz[estadoActual, valor];
                     i--;
                 }
             }
-            
-            foreach(TokensEnArchivo t in tea)
+
+            foreach (TokensEnArchivo t in tea)
             {
                 textBox2.AppendText("<Linea: " + t.numeroLinea + " Variable: \"" + t.variable + "\" TOKEN: \"" + t.valor + "\">\n");
-               // Console.WriteLine("Linea: " + t.numeroLinea + " Variable: " + t.variable +  " TOKEN: " + t.valor);
+                // Console.WriteLine("Linea: " + t.numeroLinea + " Variable: " + t.variable +  " TOKEN: " + t.valor);
             }
             textBox2.AppendText("--------------------------------------------------------------" + "\n");
             tea.Clear();
             lineas.Clear();
+            expectedChars.Clear();
         }
-        
+        /*
+        public string analisisLexico(ref int pos)
+        {
+            return "";
+        }
+        */
         private void button3_Click(object sender, EventArgs e)
         {
             caracteres.Clear();
@@ -480,11 +491,11 @@ namespace circle_tutuorial
         {
             // se puede hacer una estrructura de datos para obtener los token esperados en la siguoiente iteracion
             List<string> expectedChars = new List<string>();
-            foreach(Transiciones t in transiciones)
+            foreach (Transiciones t in transiciones)
             {
                 if (t.estadoInicial == estadoActual)
                 {
-                    //Console.WriteLine("Expected: " + t.caracter);
+                    Console.WriteLine("Expected: " + t.caracter);
                     expectedChars.Add(t.caracter);
                 }
             }

@@ -7,24 +7,22 @@ negativo = -
 diferente = !
 coma = ,
 punto = .
-Inicio = inicio
-Fin = fin
-Si = si
-Sino = sino
 TOKENS
 numeroPositivo = positivo digito digito* ,
 numeroNegativo = negativo digito digito* ,
-numeroRealPositivo = positivo digito* punto digito digito* ,
-numeroRealNegativo = negativo digito* punto digito digito* ,
+numeroRealPositivo = positivo digito digito* punto digito digito* ,
+numeroRealPositivo = positivo punto digito digito* ,
+numeroRealNegativo = negativo digito digito* punto digito digito* ,
 identificador = letras letras* digito* ,
 asignacion = asignacion ,
 igualdad = asignacion asignacion ,
 diferente = diferente asignacion ,
 coma = coma ,
-Inicio = Inicio ,
-Fin = Fin ,
-Si = Si ,
-Sino = Sino ,
+RESERVADAS
+inicio
+fin
+si
+sino
 FINDEGRAMATICA
 
 
