@@ -452,7 +452,9 @@ namespace circle_tutuorial
         {
             return "";
         }
-        */
+        */    
+
+
         private void button3_Click(object sender, EventArgs e)
         {
             caracteres.Clear();
