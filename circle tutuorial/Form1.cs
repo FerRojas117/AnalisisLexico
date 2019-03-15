@@ -251,13 +251,10 @@ namespace circle_tutuorial
                         {
                             foreach (Transiciones tr in transiciones)
                             {
-                                //Console.WriteLine("EA: " + tr.estadoInicial + " caracter: " + tr.caracter + "EF: " + tr.estadoFinal);
                                 foreach (int x in numEstados)
                                 {
                                     if (tr.estadoInicial == estadoActual && tr.caracter == c.valor && tr.estadoFinal == x)
                                     {
-                                        //Console.WriteLine("EA: " + tr.estadoInicial + " caracter: " + tr.caracter + "EF: " + tr.estadoFinal);
-                                        // Console.WriteLine("TRansicion repetida: " + tr.estadoInicial + " " + tr.caracter + " " + tr.estadoFinal);
                                         estadoActual = tr.estadoFinal;
                                         flagForRepeated = true;
                                         break;
@@ -269,7 +266,6 @@ namespace circle_tutuorial
 
                             if (flagHasRepetition)
                             {
-                                // Console.WriteLine("Con rep");
                                 Transiciones transiConRepeticion = new Transiciones(estadoActual, c.valor, estadoActual);
                                 Console.WriteLine("EA: " + estadoActual + " TOK: " + c.valor + " EF: " + estadoActual);
                                 transiciones.Add(transiConRepeticion);
@@ -310,12 +306,6 @@ namespace circle_tutuorial
                 finales.Add(f_blank);
                 estadoActual = estadoInicial;
             }
-            /*
-            foreach(Transiciones t in transiciones)
-            {
-                Console.WriteLine("EI: " + t.estadoInicial + " TOK: " + t.caracter + " EF: " + t.estadoFinal);
-            }
-            */
         }
 
 
@@ -326,16 +316,18 @@ namespace circle_tutuorial
          */
         private void button1_Click(object sender, EventArgs e)
         {
-            string tok = "";
             int contadorLineas = textBox1.Lines.Count();
             bool isNumber;
             bool isLetter;
-            int valor;
-            int estadoInicial = 0;
-            int estadoActual = 0;
+            string errDeCaracter = "";
+            int posicion = 0;
             int k = 0;
-            bool flagIsReservada = false;
+            List<string> expectedChars = new List<string>();
+            TokensEnArchivo tar;
+            
+           
 
+            
             for (int i = 0; i < contadorLineas; i++)
             {
                 for (int j = 0; j < textBox1.Lines[i].Length; j++)
@@ -344,34 +336,67 @@ namespace circle_tutuorial
                     if (String.IsNullOrEmpty(caracter)) continue;
                     isNumber = checkIfNumero(caracter);
                     isLetter = checkIfLetter(caracter);
-                    //string caracterNext = textBox1.Lines[i][j+1].ToString();  
                     Lineas l = new Lineas(i + 1, caracter, isNumber, isLetter);
                     lineas.Add(l);
                 }
                 k = i + 1;
             }
-
+            
             foreach (Caracteres c in caracteres)
             {
                 if (lineas[lineas.Count - 1].caracter != c.valor && c.valor != "NUMERO" && c.valor != "ALFABETO" && c.valor != " ")
                 {
                     Lineas final = new Lineas(k, c.valor, false, false);
-                    //Lineas espacio = new Lineas(k, c.valor, false, false);
-                   // Lineas espacio = new Lineas(k, c.valor", false, false);
                     Console.WriteLine("VALOR FINAL: " + c.valor);
-                  //  lineas.Add(espacio);
                     lineas.Add(final);
                     break;
                 }
             }
 
-            string tipo = "";
+            while (posicion < lineas.Count)
+            {
+                Console.WriteLine("Esta en ciclo.");
+                tar = AnalisisLexico(ref posicion, ref errDeCaracter);
+                if(tar.valor == "ERROR400")
+                {
+                    textBox2.AppendText(errDeCaracter);
+                    break;
+                }
+                else if (tar.valor == "EOF")
+                { 
+                    break;
+                }
+                tea.Add(tar);
+                Console.WriteLine("Linea: " + tar.numeroLinea + " Variable: " + tar.variable + " TOKEN: " + tar.valor);
+            }
+
+            foreach (TokensEnArchivo t in tea)
+            {
+               textBox2.AppendText("<Linea: " + t.numeroLinea + " Variable: \"" + t.variable + "\" TOKEN: \"" + t.valor + "\">\n");
+            }
+                                    
+            textBox2.AppendText("--------------------------------------------------------------" + "\n");
+            tea.Clear();
+            lineas.Clear();
+            expectedChars.Clear();
+        }
+
+      
+        public TokensEnArchivo AnalisisLexico(ref int pos, ref string errDeCaracter)
+        {
+            int estadoActual = 0;
+            int valor;
+
             bool isExpected = false;
+
+            string tok = "";
+            string tipo = "";
+            TokensEnArchivo tokADevolver;
             List<string> expectedChars = new List<string>();
-            for (int i = 0; i < lineas.Count; i++)
+
+            for (; pos < lineas.Count; pos++)
             {
                 isExpected = false;
-                Console.WriteLine("EA: " + estadoActual + " CAR: \'" + lineas[i].caracter + "\' ");
                 foreach (Finales f in finales)
                 {
                     if (estadoActual == f.estado)
@@ -382,77 +407,59 @@ namespace circle_tutuorial
                             if (tok == reserv)
                             {
                                 Console.WriteLine("ENTRO A RESERV" + " Variable: " + tok + " TOKEN: " + tok);
-                                TokensEnArchivo esReservada = new TokensEnArchivo(lineas[i].numeroLinea, reserv, tok);
-                                Console.WriteLine("Linea: " + lineas[i].numeroLinea + " Variable: " + tok + " TOKEN: " + tok);
-                                tea.Add(esReservada);
-                                tok = "";
-                                estadoActual = estadoInicial;
-                                flagIsReservada = true;
+                                tokADevolver = new TokensEnArchivo(lineas[pos].numeroLinea, reserv, tok);
+                                return tokADevolver;
                             }
                         }
-                        if (flagIsReservada) { flagIsReservada = false; break; }
-                        TokensEnArchivo tena = new TokensEnArchivo(lineas[i].numeroLinea, f.token, tok);
-                        Console.WriteLine("Linea: " + lineas[i].numeroLinea + " Variable: " + f.token + " TOKEN: " + tok);
-                        tea.Add(tena);
-                        tok = "";
-                        estadoActual = estadoInicial;
+                        tokADevolver = new TokensEnArchivo(lineas[pos].numeroLinea, f.token, tok);
+                        return tokADevolver;
+                        
                     }
                 }
                 expectedChars = expectedChar(estadoActual);
 
                 foreach (string s in expectedChars)
                 {
-                    if (lineas[i].isNumber) tipo = "NUMERO";
-                    else if (lineas[i].isLetter) tipo = "ALFABETO";
-                    else tipo = lineas[i].caracter;
+                    if (lineas[pos].isNumber) tipo = "NUMERO";
+                    else if (lineas[pos].isLetter) tipo = "ALFABETO";
+                    else tipo = lineas[pos].caracter;
                     if (tipo == s)
                     {
                         valor = getPosAlfa(tipo);
                         estadoActual = cm.Matriz[estadoActual, valor];
-                        tok += lineas[i].caracter;
+                        tok += lineas[pos].caracter;
                         isExpected = true;
                         break;
                     }
                 }
                 if (!isExpected)
-                {                  
-                    tipo = "otro"; 
+                {
+                    tipo = "otro";
                     Console.WriteLine("ES OTRO");
                     valor = getPosAlfa(tipo);
                     if (cm.Matriz[estadoActual, valor] == -1)
                     {
-                        textBox2.AppendText("token INESPERADO: " + lineas[i].caracter + ". TOKEN ESPERADO: ");
+                        
+                        errDeCaracter= "TOKEN INESPERADO: " + lineas[pos].caracter + ". TOKEN ESPERADO: ";
+                        tok = "ERROR400";
                         foreach (string s in expectedChars)
                         {
-                            textBox2.AppendText(s + " || ");
+                            errDeCaracter += s + " || ";
                         }
                         textBox2.AppendText("\n");
                         lineas.Clear();
                         expectedChars.Clear();
                         tea.Clear();
-                        return;
+                        tokADevolver = new TokensEnArchivo(1, tok, tok);
+                        return tokADevolver;
                     }
                     estadoActual = cm.Matriz[estadoActual, valor];
-                    i--;
+                    pos--;
                 }
             }
-
-            foreach (TokensEnArchivo t in tea)
-            {
-                textBox2.AppendText("<Linea: " + t.numeroLinea + " Variable: \"" + t.variable + "\" TOKEN: \"" + t.valor + "\">\n");
-                // Console.WriteLine("Linea: " + t.numeroLinea + " Variable: " + t.variable +  " TOKEN: " + t.valor);
-            }
-            textBox2.AppendText("--------------------------------------------------------------" + "\n");
-            tea.Clear();
-            lineas.Clear();
-            expectedChars.Clear();
+            tokADevolver = new TokensEnArchivo(lineas[pos-1].numeroLinea, "EOF", "EOF");
+            return tokADevolver;
         }
-        /*
-        public string analisisLexico(ref int pos)
-        {
-            return "";
-        }
-        */    
 
 
         private void button3_Click(object sender, EventArgs e)
@@ -662,7 +669,7 @@ namespace circle_tutuorial
         }
     }
 
-    class TokensEnArchivo
+   public class TokensEnArchivo
     {
         public int numeroLinea;
         public string variable;
