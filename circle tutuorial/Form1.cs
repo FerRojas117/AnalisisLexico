@@ -166,9 +166,13 @@ namespace circle_tutuorial
 
             Caracteres otro = new Caracteres("otro", "otro");
             Caracteres espacio = new Caracteres(" ", " ");
+            Caracteres saltoLinea = new Caracteres("\n", "\n");
+            Caracteres tabulador = new Caracteres("\t", "\t");
 
             caracteres.Add(otro);
             caracteres.Add(espacio);
+            caracteres.Add(saltoLinea);
+            caracteres.Add(tabulador);
             //linea añadida
 
 
@@ -300,10 +304,28 @@ namespace circle_tutuorial
                 estados++;
                 numEstados.Add(estados);
 
+                Transiciones caracterEspacio = new Transiciones(estadoActual, "\n", estadoActual + 3);
+               // Console.WriteLine("EA: " + estadoActual + " TOK: espacio" + " EF: " + (estadoActual + 2));
+                transiciones.Add(caracterEspacio);
+                estados++;
+                numEstados.Add(estados);
+
+                Transiciones caracterTabulador = new Transiciones(estadoActual, "\t", estadoActual + 4);
+                //Console.WriteLine("EA: " + estadoActual + " TOK: espacio" + " EF: " + (estadoActual + 2));
+                transiciones.Add(caracterTabulador);
+                estados++;
+                numEstados.Add(estados);
+
+
                 Finales f = new Finales(estadoActual + 1, t.variable);
                 Finales f_blank = new Finales(estadoActual + 2, t.variable);
+                Finales f_espacio = new Finales(estadoActual + 3, t.variable);
+                Finales f_tabulador = new Finales(estadoActual + 4, t.variable);
+
                 finales.Add(f);
                 finales.Add(f_blank);
+                finales.Add(f_espacio);
+                finales.Add(f_tabulador);
                 estadoActual = estadoInicial;
             }
         }
@@ -324,16 +346,15 @@ namespace circle_tutuorial
             int k = 0;
             List<string> expectedChars = new List<string>();
             TokensEnArchivo tar;
-            
-           
-
-            
+   
             for (int i = 0; i < contadorLineas; i++)
             {
                 for (int j = 0; j < textBox1.Lines[i].Length; j++)
                 {
                     string caracter = textBox1.Lines[i][j].ToString();
                     if (String.IsNullOrEmpty(caracter)) continue;
+                    if (caracter == "\n") caracter = " ";
+                    if (caracter == "\t") caracter = " ";
                     isNumber = checkIfNumero(caracter);
                     isLetter = checkIfLetter(caracter);
                     Lineas l = new Lineas(i + 1, caracter, isNumber, isLetter);
@@ -394,6 +415,11 @@ namespace circle_tutuorial
             TokensEnArchivo tokADevolver;
             List<string> expectedChars = new List<string>();
 
+            while(lineas[pos].caracter == " " || lineas[pos].caracter == "\n" || lineas[pos].caracter == "\t")
+            {
+                pos++;
+            }
+
             for (; pos < lineas.Count; pos++)
             {
                 isExpected = false;
@@ -401,7 +427,7 @@ namespace circle_tutuorial
                 {
                     if (estadoActual == f.estado)
                     {
-                        tok = tok.Trim(new Char[] { ' ' });
+                        tok = tok.Trim(new Char[] { ' ', '\n', '\t' });
                         foreach (string reserv in reservadas)
                         {
                             if (tok == reserv)
@@ -412,8 +438,7 @@ namespace circle_tutuorial
                             }
                         }
                         tokADevolver = new TokensEnArchivo(lineas[pos].numeroLinea, f.token, tok);
-                        return tokADevolver;
-                        
+                        return tokADevolver;  
                     }
                 }
                 expectedChars = expectedChar(estadoActual);
